@@ -1,0 +1,146 @@
+ClassDeclaration:
+    'class' name=ID '{'
+        members*=ClassMember
+    '}'
+;
+
+ClassMember:
+    MethodDeclaration
+;
+
+MethodDeclaration:
+    'public' 'static'? type=Type name=ID '('
+        parameters=ParameterList?
+    ')' '{'
+        statements*=Statement
+    '}'
+;
+
+VariableDeclaration:
+    type=Type? name=ID ('=' value=Expression)? ';'?
+;
+
+Type:
+    'void' | 'int' | 'string'
+;
+
+ParameterList:
+    parameters+=Parameter[',']
+;
+
+Parameter:
+    type=Type name=ID
+;
+
+Statement:
+    RepeatUntilSuccess | RandomRangeExpression |
+    RandomChance | CoinFlip | IfStatement | ElseIfStatement | ForLoop | 
+    WhileLoop | SlotMachineExpression | PrintStatement | VariableDeclaration | DiceRoll
+;
+
+PrintStatement:
+    'print' '(' output=Expression ')' ';'
+;
+
+IfStatement:
+    'if' '(' condition=Expression ')' '{'
+        trueBranch*=Statement
+    '}'
+    elseifBranches*=ElseIfStatement*
+    ('else' '{' falseBranch*=Statement '}')?
+; 
+
+ElseIfStatement:
+    'else if' '(' condition=Expression ')' '{'
+        body*=Statement
+    '}'
+;
+
+WhileLoop:
+    'while' '(' condition=Expression ')' ('[' 'chance' '(' probability=FLOAT ')' ']')? '{'
+        body*=Statement
+    '}'
+;
+
+ForLoop:
+    'for' '(' initialization=VariableDeclaration condition=Expression ';' update=VariableDeclaration ')' ('[' 'chance' '(' probability=FLOAT ')' ']')? '{'
+        body*=Statement
+    '}'
+;
+
+LoopChance:
+    'chance' '(' x=FLOAT ')'
+;
+
+Expression:
+    OrExpression 
+;
+
+OrExpression:
+    AndExpression ('||' AndExpression)*
+;
+
+AndExpression:
+    EqualityExpression ('&&' EqualityExpression)*
+;
+
+EqualityExpression:
+    RelationalExpression (('==' | '!=') RelationalExpression)*
+;
+
+RelationalExpression:
+    AdditiveExpression (('<' | '<=' | '>' | '>=') AdditiveExpression)*
+;
+
+AdditiveExpression:
+    MultiplicativeExpression (('+' | '-') MultiplicativeExpression)*
+;
+
+MultiplicativeExpression:
+    PrimaryExpression (('*' | '/' | '%') PrimaryExpression)*
+;
+
+PrimaryExpression:
+   ID | INT | STRING | '(' Expression ')'
+;
+
+CoinFlip:
+    'coinFlip' '()' '{'
+        'heads' '{'
+            headsBody*=Statement
+        '}'
+        'tails' '{'
+            tailsBody*=Statement
+        '}'
+    '}'
+;
+
+RandomChance:
+    'randomChance' '(' chance=FLOAT ')' '{'
+        body*=Statement
+    '}'
+;
+
+RandomChanceExpression:
+    'randomChance' '(' chance=FLOAT ')'
+;
+
+DiceRoll:
+    dice=INT '-' 'diceRoll' '(' pick=INT ')' '{'
+        body*=Statement
+    '}'
+;
+
+RandomRangeExpression:
+    ('let')? name=ID '=' 'randomRange' '(' start=INT ',' end=INT ')' ';'
+;
+
+RepeatUntilSuccess:
+    'repeatUntilSuccess' '(' 'randomChance' '(' probability=FLOAT ')' ')' '{'
+        body*=Statement
+    '}'
+;
+
+SlotMachineExpression:
+    spin='slotMachine' '()' ';'
+;
